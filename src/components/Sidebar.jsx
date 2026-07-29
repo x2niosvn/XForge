@@ -93,7 +93,7 @@ export default function Sidebar({ active, onChange }) {
         {/* Footer */}
         <div className="p-5 border-t border-line bg-bg0/25">
           <div className="text-[10px] text-fgfaint leading-relaxed font-semibold">
-            <div className="font-bold text-fgdim mb-0.5">XForge v0.1.0</div>
+            <div className="font-bold text-fgdim mb-0.5">XForge v0.1.2</div>
             Minecraft Client & Profile Manager.
           </div>
         </div>

@@ -292,7 +292,7 @@ export default function SettingsPage() {
 
         <Section icon={<Info size={18} />} title="Về XForge" desc="Thông tin phiên bản.">
           <div className="text-sm text-fgdim leading-relaxed space-y-1">
-            <p><span className="text-fg font-semibold">XForge</span> — Minecraft Client & Profile Manager, phiên bản 0.1.0.</p>
+            <p><span className="text-fg font-semibold">XForge</span> — Minecraft Client & Profile Manager, phiên bản 0.1.2.</p>
             <p className="text-xs text-fgfaint">
               Minecraft là thương hiệu của Mojang Studios / Microsoft. Dự án này không liên kết với Mojang.
             </p>

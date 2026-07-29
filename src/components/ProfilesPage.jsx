@@ -123,7 +123,7 @@ export default function ProfilesPage({ profiles, selectedProfileId, reload, onSe
             }
           />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-5xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-5xl items-start">
             {profiles.map((p) => (
               <ProfileCard
                 key={p.id}
@@ -188,7 +188,7 @@ const PHASE_LABEL = {
 }
 
 function ProfileCard({ profile, isSelected, onSelect, onPlay, onEdit, onInstall, installState, onOpenFolder, onDelete, onManageMods, runningProfileId, playState }) {
-  const isInstalling = !!installState
+  const isInstalling = !!installState && !profile.installedAt
   const percent = installState?.percent ?? 0
   const phaseLabel = installState ? (installState.label || PHASE_LABEL[installState.phase] || installState.phase) : ''
   const showIndet = installState && (installState.phase === 'starting' || installState.phase === 'manifests') && percent === 0
@@ -202,12 +202,6 @@ function ProfileCard({ profile, isSelected, onSelect, onPlay, onEdit, onInstall,
       'p-5 transition-colors relative flex flex-col gap-4',
       isSelected ? 'border-accent/60 bg-accentsoft/30' : 'hover:border-linestrong',
     ].join(' ')}>
-      {isSelected && (
-        <span className="absolute top-3 right-3 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-accentsoft text-accent ring-1 ring-accent/40 font-bold flex items-center gap-1 z-10">
-          <Check size={10} weight="bold" />
-          Active
-        </span>
-      )}
 
       {/* ─── 1. Header — icon, name, badges ─────────────────────────── */}
       <div className="flex items-start gap-3">

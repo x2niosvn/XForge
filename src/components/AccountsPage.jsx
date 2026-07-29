@@ -189,7 +189,7 @@ export default function AccountsPage() {
   return (
     <div className="flex w-full min-h-0 flex-1 overflow-hidden">
       {/* Cột trái: Quản lý tài khoản và Skin */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden border-r border-line bg-bg1">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden border-r border-line bg-transparent">
         {/* Header */}
         <PageHeader
           eyebrow="Tài khoản"
@@ -367,11 +367,11 @@ export default function AccountsPage() {
 
       {/* Cột phải: Khung hiển thị mô hình 3D */}
       <div
-        className="flex-shrink-0 flex flex-col relative overflow-hidden bg-bg2"
+        className="flex-shrink-0 flex flex-col relative overflow-hidden bg-bg0/25 backdrop-blur-sm"
         style={{ width: 260, borderLeft: '1px solid var(--color-line)' }}
       >
         {/* Background Canvas Effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1f0f1c] via-[#0d070b] to-bg2 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-[#0d070b]/35 to-bg0/20 pointer-events-none">
           {/* Grid lines overlay */}
           <div
             className="absolute inset-0 opacity-15"

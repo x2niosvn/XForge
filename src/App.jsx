@@ -11,10 +11,60 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AccountsProvider } from './hooks/useAccounts.jsx'
 import { ToastProvider, useToast } from './hooks/useToast.jsx'
 
+import cherryBlossom from './assets/video/cherry-blossom.1920x1080.mp4'
+import minecraftSunsetFarm from './assets/video/minecraft-sunset-farm.3840x2160.mp4'
+import sakuraForest from './assets/video/sakura-forest-minecraft.1920x1080.mp4'
+import sunsetShader from './assets/video/sunset-shader.1920x1080.mp4'
+
+const VIDEO_MAP = {
+  'cherry-blossom.1920x1080.mp4': cherryBlossom,
+  'minecraft-sunset-farm.3840x2160.mp4': minecraftSunsetFarm,
+  'sakura-forest-minecraft.1920x1080.mp4': sakuraForest,
+  'sunset-shader.1920x1080.mp4': sunsetShader,
+}
+
 const isElectron = typeof window !== 'undefined' && !!window.electronAPI
 
 function AppInner() {
   const [activePage, setActivePage] = useState('home')
+  const [settings, setSettings] = useState(null)
+  const [activeVideoBg, setActiveVideoBg] = useState(null)
+  
+  const reloadSettings = useCallback(async () => {
+    if (!isElectron) return
+    const s = await window.electronAPI.getSettings()
+    setSettings(s)
+  }, [])
+
+  useEffect(() => {
+    reloadSettings()
+  }, [reloadSettings])
+
+  useEffect(() => {
+    // If settings are not loaded yet, default to the sunset shader immediately
+    const chosen = settings ? (settings.videoBg || 'sunset-shader.1920x1080.mp4') : 'sunset-shader.1920x1080.mp4'
+    if (chosen === 'random') {
+      // Pick a random video if not initialized, or if the setting just changed to random
+      const keys = Object.keys(VIDEO_MAP)
+      const rand = keys[Math.floor(Math.random() * keys.length)]
+      setActiveVideoBg(rand)
+    } else {
+      setActiveVideoBg(chosen)
+    }
+  }, [settings])
+
+  const handleVideoEnded = useCallback(() => {
+    const chosen = settings ? (settings.videoBg || 'sunset-shader.1920x1080.mp4') : 'sunset-shader.1920x1080.mp4'
+    if (chosen === 'random') {
+      const keys = Object.keys(VIDEO_MAP)
+      const filtered = keys.filter((k) => k !== activeVideoBg)
+      const rand = filtered.length > 0
+        ? filtered[Math.floor(Math.random() * filtered.length)]
+        : keys[Math.floor(Math.random() * keys.length)]
+      setActiveVideoBg(rand)
+    }
+  }, [settings, activeVideoBg])
+
   const [profilesData, setProfilesData] = useState({ profiles: [], selectedProfileId: null })
   const [loading, setLoading] = useState(true)
   const [pageContext, setPageContext] = useState(null)
@@ -141,7 +191,7 @@ function AppInner() {
       case 'accounts':
         return <AccountsPage />
       case 'settings':
-        return <SettingsPage />
+        return <SettingsPage onSettingsChanged={reloadSettings} />
       case 'play':
         return (
           <PlayPage
@@ -173,6 +223,22 @@ function AppInner() {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-bg0 text-white relative overflow-hidden">
+      {/* Video Background */}
+      {activeVideoBg && activeVideoBg !== 'none' && VIDEO_MAP[activeVideoBg] && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          <video
+            key={activeVideoBg}
+            autoPlay
+            loop={settings?.videoBg !== 'random'}
+            muted
+            playsInline
+            onEnded={handleVideoEnded}
+            className="absolute inset-0 w-full h-full object-cover opacity-50 filter brightness-[0.4] contrast-[1.1]"
+            src={VIDEO_MAP[activeVideoBg]}
+          />
+        </div>
+      )}
+
       {/* Moving Ambient Background Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute w-[40vw] h-[40vw] rounded-full bg-rose-400/10 blur-[100px] animate-blob1 top-[-10%] left-[-10%]" />

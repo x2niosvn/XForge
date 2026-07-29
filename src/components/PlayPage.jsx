@@ -179,7 +179,7 @@ export default function PlayPage({ profiles, selectedProfileId, onNavigate, relo
       {/* Logs */}
       <div className="flex-1 min-h-0 px-8 pb-6 flex flex-col">
         <Card className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line px-3 py-2 bg-bg2 flex-shrink-0">
+          <div className="flex items-center justify-between border-b border-line px-3 py-2 bg-transparent flex-shrink-0">
             <div className="flex items-center gap-1">
               {['ALL', 'INFO', 'WARN', 'ERROR', 'DEBUG'].map((lv) => (
                 <button
@@ -187,7 +187,7 @@ export default function PlayPage({ profiles, selectedProfileId, onNavigate, relo
                   onClick={() => setFilter(lv)}
                   className={[
                     'text-xs px-2.5 py-1 rounded-md font-medium transition-colors',
-                    filter === lv ? 'bg-bg3 text-fg' : 'text-fgdim hover:bg-bg3 hover:text-fg',
+                    filter === lv ? 'bg-bg3/60 text-fg' : 'text-fgdim hover:bg-bg3/30 hover:text-fg',
                   ].join(' ')}
                 >
                   {lv}{lv !== 'ALL' && counts[lv] ? ` (${counts[lv]})` : ''}
@@ -211,7 +211,7 @@ export default function PlayPage({ profiles, selectedProfileId, onNavigate, relo
               </Button>
             </div>
           </div>
-          <div ref={logBoxRef} className="flex-1 overflow-auto p-3 font-mono-mc text-[12.5px] leading-5 bg-bg0">
+          <div ref={logBoxRef} className="flex-1 overflow-auto p-3 font-mono-mc text-[12.5px] leading-5 bg-transparent custom-scrollbar">
             {filtered.length === 0 ? (
               <div className="text-fgfaint text-xs h-full flex items-center justify-center select-none">
                 {logs.length === 0 ? 'Chưa có log. Nhấn Chơi để khởi chạy Minecraft.' : 'Không có dòng nào khớp bộ lọc.'}
@@ -274,8 +274,8 @@ function ProfileSwitcher({ profiles, current, onChange, onNavigateCreate }) {
         <CaretDown size={12} weight="bold" />
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-80 rounded-xl bg-bg1 border border-line shadow-2xl z-30 overflow-hidden">
-          <div className="max-h-72 overflow-auto">
+        <div className="absolute right-0 mt-2 w-80 rounded-xl bg-bg1/95 backdrop-blur-md border border-line shadow-2xl z-30 overflow-hidden">
+          <div className="max-h-[240px] overflow-y-auto custom-scrollbar">
             {profiles.length === 0 ? (
               <div className="p-4 text-xs text-fgdim">Chưa có profile.</div>
             ) : profiles.map((p) => (
@@ -283,15 +283,28 @@ function ProfileSwitcher({ profiles, current, onChange, onNavigateCreate }) {
                 key={p.id}
                 onClick={() => { onChange(p.id); setOpen(false) }}
                 className={[
-                  'w-full text-left px-3 py-2 flex items-center gap-2 transition-colors',
-                  p.id === current?.id ? 'bg-accentsoft' : 'hover:bg-bg2',
+                  'w-full text-left px-3 py-2 flex items-center gap-2.5 transition-colors border-l-2',
+                  p.id === current?.id ? 'bg-accent/15 border-accent' : 'hover:bg-bg2 border-transparent',
                 ].join(' ')}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate text-fg">{p.name}</div>
-                  <div className="text-[11px] text-fgfaint">{p.loader} • {p.gameVersion}</div>
+                {/* Profile Icon */}
+                <div className="w-8 h-8 rounded bg-bg2 ring-1 ring-line flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {p.importIconUrl ? (
+                    <img src={p.importIconUrl} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    <LoaderIcon loader={p.loader} className="w-full h-full" />
+                  )}
                 </div>
-                {p.id === current?.id && <Check size={13} className="text-accent" />}
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold truncate text-fg leading-snug">{p.name}</div>
+                  <div className="text-[10px] text-fgfaint mt-0.5 font-medium leading-none">
+                    <span className="uppercase">{p.loader}</span> • <span className="font-mono">{p.gameVersion}</span>
+                  </div>
+                </div>
+
+                {p.id === current?.id && <Check size={13} className="text-accent flex-shrink-0" />}
               </button>
             ))}
           </div>

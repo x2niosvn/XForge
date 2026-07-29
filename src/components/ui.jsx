@@ -5,7 +5,7 @@ import React from 'react'
 /** PageHeader — eyebrow + title + optional subtitle/right-slot. */
 export function PageHeader({ eyebrow, title, subtitle, children }) {
   return (
-    <div className="px-8 pt-6 pb-4 flex items-center justify-between gap-4 flex-shrink-0 border-b border-line bg-bg1/20">
+    <div className="px-8 pt-6 pb-4 flex items-center justify-between gap-4 flex-shrink-0">
       <div className="flex-1 min-w-0">
         {eyebrow && (
           <span className="text-[9.5px] uppercase tracking-widest text-accent font-bold mb-1.5 block leading-none">{eyebrow}</span>

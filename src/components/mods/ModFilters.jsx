@@ -150,7 +150,7 @@ function VersionGroupDropdown({ value, onChange, groups }) {
   )
 }
 
-export function ModFilters({ filters, onChange, platform, gameVersions = [], availableLoaders = [], lockFilters = false }) {
+export function ModFilters({ filters, onChange, platform, gameVersions = [], availableLoaders = [], lockFilters = false, total = 0 }) {
   console.log('ModFilters debug:', { lockFilters, filters, availableLoaders })
   const [versionGroup, setVersionGroup] = useState('all')
   const [versionSearch, setVersionSearch] = useState('')
@@ -212,12 +212,17 @@ export function ModFilters({ filters, onChange, platform, gameVersions = [], ava
   const selectedLoaders = filters.loaders || []
 
   return (
-    <div className="w-56 flex-shrink-0 bg-bg0 border-r border-line flex flex-col overflow-hidden">
+    <div className="w-56 flex-shrink-0 bg-bg0/30 backdrop-blur-md border border-line rounded-xl flex flex-col overflow-hidden">
       {/* Header */}
       <div className="px-3 py-2.5 border-b border-line flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs font-semibold text-fg">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-fg">
           <FunnelSimple size={14} />
-          Bộ lọc
+          <span>Bộ lọc</span>
+          {total > 0 && (
+            <span className="text-[9.5px] px-1.5 py-0.5 rounded-full font-mono font-bold bg-white/5 border border-white/5 text-fgfaint">
+              {total.toLocaleString()}
+            </span>
+          )}
         </div>
         {!lockFilters && (selectedLoaders.length > 0 || selectedVersions.length > 0) && (
           <button
@@ -308,7 +313,7 @@ export function ModFilters({ filters, onChange, platform, gameVersions = [], ava
                 </div>
               )}
 
-              <div className="flex flex-col gap-0.5 overflow-y-auto max-h-48">
+              <div className="flex flex-col gap-0.5 overflow-y-auto max-h-60 pb-2 pr-1 custom-scrollbar">
                 {filteredVersions.length === 0 && (
                   <p className="text-fgfaint text-xs py-3 text-center">
                     {gameVersions.length === 0 ? 'Đang tải...' : 'Không có kết quả'}

@@ -97,45 +97,41 @@ export default function ModrinthTab({ selectedProfileId, pageContext, onDetailSt
 
   return (
     <div className="flex flex-col h-full overflow-hidden min-w-0">
-      <div className="flex-shrink-0 px-4 pt-3 pb-2 space-y-2">
-        <ModrinthSubTabs active={filters.contentType} onChange={handleSubTab} />
+      <div className="flex-shrink-0 px-8 py-2 flex flex-col gap-2">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <ModrinthSubTabs active={filters.contentType} onChange={handleSubTab} />
 
-        <form onSubmit={handleSearch} className="flex items-center gap-2">
-          <div className="flex-1 relative">
-            <MagnifyingGlass
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-fgfaint pointer-events-none"
-            />
-            <input
-              type="text"
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
-              placeholder={`Tìm kiếm ${filters.contentType} trên Modrinth...`}
-              className="w-full pl-9 pr-4 py-2 text-sm bg-bg2 rounded-lg ring-1 ring-line text-fg placeholder:text-fgfaint focus:outline-none focus:ring-accent/50 transition-colors"
-            />
-          </div>
-          <ViewToggle view={view} onChange={setView} />
-        </form>
-
-        <div className="flex items-center justify-center min-h-[18px]">
-          {loading ? (
-            <div className="w-full h-0.5 bg-bg2 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  background: 'linear-gradient(90deg, transparent 0%, #fb923c 40%, #f97316 60%, transparent 100%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer-bar 1.4s linear infinite',
-                  width: '100%',
-                }}
+          <form onSubmit={handleSearch} className="flex items-center gap-2 min-w-[280px] max-w-md w-full md:w-auto">
+            <div className="flex-1 relative">
+              <MagnifyingGlass
+                size={14}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-fgfaint pointer-events-none"
+              />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                placeholder={`Tìm kiếm ${filters.contentType} trên Modrinth...`}
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-bg2/40 hover:bg-bg2/60 focus:bg-bg2/80 rounded-lg ring-1 ring-line text-fg placeholder:text-fgfaint focus:outline-none focus:ring-accent/40 transition-all"
               />
             </div>
-          ) : total > 0 ? (
-            <p className="text-xs text-fgfaint">
-              {total.toLocaleString()} kết quả
-            </p>
-          ) : null}
+            <ViewToggle view={view} onChange={setView} />
+          </form>
         </div>
+
+        {loading && (
+          <div className="w-full h-0.5 bg-line/20 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, #fb923c 40%, #f97316 60%, transparent 100%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer-bar 1.4s linear infinite',
+                width: '100%',
+              }}
+            />
+          </div>
+        )}
 
         <style>{`
           @keyframes shimmer-bar {
@@ -145,7 +141,7 @@ export default function ModrinthTab({ selectedProfileId, pageContext, onDetailSt
         `}</style>
       </div>
 
-      <div className="flex flex-1 overflow-hidden min-w-0">
+      <div className="flex flex-1 overflow-hidden min-w-0 px-8 py-4 gap-6">
         <ModFilters
           filters={filters}
           onChange={updateFilters}
@@ -153,9 +149,10 @@ export default function ModrinthTab({ selectedProfileId, pageContext, onDetailSt
           gameVersions={gameVersions}
           availableLoaders={['fabric', 'forge', 'neoforge', 'quilt']}
           lockFilters={!!pageContext}
+          total={total}
         />
 
-        <div className="flex-1 overflow-hidden p-2 relative">
+        <div className="flex-1 overflow-hidden p-0.5 relative">
           <LoadingOverlay visible={tabLoading} />
           <div className="h-full overflow-y-auto">
             {error && (

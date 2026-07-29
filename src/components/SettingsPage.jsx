@@ -4,11 +4,11 @@ import {
   Gear, Coffee, FolderOpen, Info, Cpu, Trash, DownloadSimple,
   CircleNotch, CheckCircle, Wrench,
 } from '@phosphor-icons/react'
-import { PageHeader, Card, Button, Badge, ProgressBar, Stat } from './ui.jsx'
+import { PageHeader, Card, Button, Badge, ProgressBar, Stat, Select } from './ui.jsx'
 
 const isElectron = typeof window !== 'undefined' && !!window.electronAPI
 
-export default function SettingsPage() {
+export default function SettingsPage({ onSettingsChanged }) {
   const toast = useToast()
   const [settings, setSettings] = useState(null)
   const [distros, setDistros] = useState([])
@@ -44,6 +44,7 @@ export default function SettingsPage() {
   const update = async (patch) => {
     const next = await window.electronAPI.setSettings(patch)
     setSettings(next)
+    onSettingsChanged?.()
   }
 
   const installJava = async (pkg) => {
@@ -127,6 +128,27 @@ export default function SettingsPage() {
               />
               <div className="w-10 h-6 bg-white/5 rounded-full peer peer-focus:ring-1 peer-focus:ring-accent/30 dark:bg-bg0 border border-line peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-fgdim peer-checked:after:bg-[#0d070b] after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent peer-checked:border-accent"></div>
             </label>
+          </div>
+
+          <div className="h-[1px] bg-line/60 my-4" />
+
+          <div className="flex items-center justify-between gap-4 py-1">
+            <div>
+              <div className="text-sm text-fg font-medium">Video hình nền Launcher</div>
+              <div className="text-xs text-fgfaint mt-0.5">Chọn video hoạt cảnh Minecraft chạy dưới nền ứng dụng.</div>
+            </div>
+            <Select
+              value={settings.videoBg || 'sunset-shader.1920x1080.mp4'}
+              onChange={(e) => update({ videoBg: e.target.value })}
+              className="w-64 text-xs font-semibold bg-bg0 text-fg"
+            >
+              <option value="none">Không dùng video (Tông Rose-Dark)</option>
+              <option value="random">Tự động chuyển (Random)</option>
+              <option value="sunset-shader.1920x1080.mp4">Sunset Shader (Mặc định)</option>
+              <option value="cherry-blossom.1920x1080.mp4">Cherry Blossom</option>
+              <option value="minecraft-sunset-farm.3840x2160.mp4">Minecraft Sunset Farm</option>
+              <option value="sakura-forest-minecraft.1920x1080.mp4">Sakura Forest</option>
+            </Select>
           </div>
         </Section>
 
@@ -292,7 +314,7 @@ export default function SettingsPage() {
 
         <Section icon={<Info size={18} />} title="Về XForge" desc="Thông tin phiên bản.">
           <div className="text-sm text-fgdim leading-relaxed space-y-1">
-            <p><span className="text-fg font-semibold">XForge</span> — Minecraft Client & Profile Manager, phiên bản 0.1.2.</p>
+            <p><span className="text-fg font-semibold">XForge</span> — Minecraft Client & Profile Manager, phiên bản 0.1.3.</p>
             <p className="text-xs text-fgfaint">
               Minecraft là thương hiệu của Mojang Studios / Microsoft. Dự án này không liên kết với Mojang.
             </p>

@@ -1,115 +1,120 @@
-# XForge
+# 🌟 XForge - Minecraft Client & Profile Manager
 
-> **Minecraft Client & Profile Manager** — Quản lý profile, tài khoản Microsoft, Java auto-install và real-time logs.
+<p align="center">
+  <img src="src/assets/forge-M5Wm9INk.png" width="120" alt="XForge Logo" />
+</p>
 
-## Tech stack
+<p align="center">
+  <strong>XForge</strong> là trình quản lý và khởi chạy Minecraft thế hệ mới được xây dựng trên nền tảng <strong>Electron + React</strong>. Ứng dụng mang lại trải nghiệm tối giản, hiện đại và đậm chất gaming với thiết kế <strong>kính mờ (Glassmorphism)</strong> xuyên thấu kết hợp <strong>hình nền video động (Animated Video Backgrounds)</strong> cực kỳ sống động.
+</p>
 
-| Layer       | Tech                                                 |
-| ----------- | ---------------------------------------------------- |
-| UI          | React 19 + Vite 8                                    |
-| Styling     | Tailwind CSS 4 (`@tailwindcss/vite`)                 |
-| Icons       | `@phosphor-icons/react`                              |
-| Desktop     | Electron 42 (frameless window + IPC)                 |
-| Microsoft   | MSAL-style OAuth2 → XBL → XSTS → Minecraft token     |
-| Minecraft   | Vanilla launcher (client jar + asset index download) |
-| Java        | Mojang runtime auto-install (legacy 8 / gamma 17 / delta 21) |
+---
 
-## Cấu trúc thư mục
+## 📸 Trải nghiệm Giao diện (Screenshots)
 
-```
-XForge/
-├─ electron/
-│  ├─ main.cjs                  # Window + IPC registration
-│  ├─ preload.cjs               # Context-isolated bridge → window.electronAPI
-│  ├─ profileManager.cjs        # Profile CRUD
-│  ├─ accountManager.cjs        # Microsoft accounts CRUD
-│  ├─ msAuth.cjs                # OAuth2 → XBL → XSTS → MC pipeline
-│  └─ launcher/
-│     ├─ vanilla/vanillaRunner.cjs   # Asset download, version manifest, game runner
-│     └─ java/javaManager.cjs        # Mojang Java runtime install / list / delete
-├─ src/
-│  ├─ App.jsx, main.jsx, index.css
-│  ├─ hooks/   (useAccounts.jsx, useToast.jsx)
-│  ├─ utils/   (format.js)
-│  └─ components/
-│     ├─ TitleBar.jsx, Sidebar.jsx
-│     ├─ HomePage.jsx, ProfilesPage.jsx, AccountsPage.jsx
-│     ├─ SettingsPage.jsx, PlayPage.jsx
-├─ package.json, vite.config.js, index.html
-```
+<p align="center">
+  <img src="IMAGE_LAUCHER/01.png" width="48%" alt="Trang chủ & Khởi chạy" />
+  <img src="IMAGE_LAUCHER/02.png" width="48%" alt="Quản lý Profiles" />
+</p>
+<p align="center">
+  <img src="IMAGE_LAUCHER/03.png" width="48%" alt="Khám phá & Tải Mods" />
+  <img src="IMAGE_LAUCHER/04.png" width="48%" alt="Quản lý Tài khoản & Skin 3D" />
+</p>
+<p align="center">
+  <img src="IMAGE_LAUCHER/05.png" width="48%" alt="Cài đặt hệ thống & Java" />
+  <img src="IMAGE_LAUCHER/06.png" width="48%" alt="Trình quản lý Mod chi tiết" />
+</p>
 
-## Chức năng đã có (v0.1 — cơ bản)
+---
 
-- ✅ **Multi-Profile** — Tạo / chọn / xoá không giới hạn profile (hiện chỉ vanilla, loader khác sẽ thêm sau)
-- ✅ **Microsoft Login (OAuth2)** — Đăng nhập qua cửa sổ modal, lưu refresh token, tự động refresh Minecraft token
-- ✅ **Java Auto-Install** — Tự động tải JRE 8 / 17 / 21 từ Mojang runtime khi khởi chạy
-- ✅ **Real-Time Logs** — Color-coded INFO / WARN / ERROR / DEBUG, copy, filter, auto-scroll
-- ✅ **Discord Rich Presence (RPC)** — Hiển thị trạng thái đang xem tab hoặc đang chơi game (mod/modpack nào, thời gian chơi, tên người chơi) trên Discord. Có tùy chọn bật/tắt trong Cài đặt.
-- ✅ **Uninstall Clean Data Option** — Hộp thoại trong trình gỡ cài đặt (NSIS Uninstaller) hỏi người dùng có muốn xóa sạch toàn bộ thư mục dữ liệu game `%APPDATA%/XForge` hay không.
-- ✅ **Frameless titlebar** + sidebar + Custom Pink Icon
-- ✅ **Toast system** (info / success / warn / error)
+## 🚀 Tính năng nổi bật
 
-## Sẽ thêm
+### 1. 🎬 Hình nền động & Giao diện Kính mờ (Glassmorphism)
+* **Video hoạt cảnh động:** Tự động phát video hoạt cảnh Minecraft dưới nền ứng dụng. Hỗ trợ thay đổi linh hoạt giữa 4 video chất lượng cao hoặc tắt/bật dễ dàng trong Cài đặt.
+* **Cơ chế Tự động chuyển (Random):** Tự động thay đổi ngẫu nhiên video hình nền mỗi khi mở app hoặc tự động chuyển tiếp sang video tiếp theo khi video hiện tại kết thúc (`onEnded` trigger).
+* **Kính mờ xuyên thấu:** Toàn bộ thanh bên (Sidebar), bảng Bộ lọc (Mod Filters) và hộp hiển thị log (Log box) đều được thiết kế dạng kính mờ (`backdrop-blur`) trong suốt, để lộ hoạt cảnh video chạy phía sau một cách vô cùng chuyên nghiệp.
 
-- ⏳ Mod import từ CurseForge & Modrinth (drag-and-drop)
-- ⏳ Fabric / Forge / NeoForge loader
-- ⏳ Play stats + notifications
-- ⏳ Shaders & resource packs
+### 2. 📂 Trình quản lý Multi-Profile & Tự động cài đặt Game
+* **Quản lý không giới hạn:** Tạo, lựa chọn và xóa các phiên bản game khác nhau một cách dễ dàng.
+* **Tự động tải game:** XForge tự động tải trực tiếp client jar, asset index và libraries chính thức từ máy chủ Mojang.
+* **Lọc phiên bản & Loader:** Hỗ trợ cài đặt Vanilla, Forge, Fabric, NeoForge và OptiFine.
 
-## Phát triển & Đóng gói (Build)
+### 3. ☕ Tự động cài đặt Java Runtime (Mojang Official)
+* **Tự động quét & tải:** Phân tích phiên bản Minecraft được chọn và tự động tải đúng phiên bản JRE tương thích (Java 8 cho $\le$ 1.16, Java 17 cho 1.17 - 1.20, Java 21 cho 1.21+).
+* **Quản lý JRE:** Cho phép cài đặt thủ công, gỡ bỏ hoặc sao chép nhanh đường dẫn Java ngay trong trang cài đặt.
 
-### 1. Cài đặt dependency:
+### 4. 🧭 Khám phá & Quản lý Mod trực tiếp
+* **Tích hợp Modrinth & CurseForge:** Tìm kiếm, xem chi tiết và tải trực tiếp Mod, Modpack, Shader, Resource Pack hay Datapack về máy chỉ với một click.
+* **Căn lề đối xứng hoàn hảo:** Thiết kế tối ưu hóa không gian hiển thị, gộp thanh tìm kiếm, bộ lọc và số lượng kết quả trùng khớp một cách tinh tế.
+* **Quản lý Mods của Profile:** Bật/Tắt (Enable/Disable) hoặc Xóa các tệp Mod đã cài đặt trực tiếp trên giao diện XForge.
+
+### 5. 🔑 Đăng nhập Microsoft OAuth2 & Quản lý Account
+* **Tài khoản Online & Offline:** Đăng nhập an toàn qua tài khoản Microsoft (OAuth2 chính thức, tự động refresh token) hoặc tạo nhanh tài khoản Offline.
+* **Tùy chỉnh Skin:** Quản lý danh sách skin tùy chỉnh và xem trực tiếp mô hình nhân vật 3D tương tác xoay/lật thời gian thực.
+
+### 6. 🎮 Discord Rich Presence (RPC) & Logs
+* **Discord RPC cực ngầu:** Tự động hiển thị trạng thái hoạt động (đang chơi game, đang xem danh sách mod, tên người chơi, modpack đang chạy và thời gian đã chơi) trên Discord cá nhân.
+* **Đầu đọc Log thời gian thực:** Phân loại màu sắc rõ ràng (INFO, WARN, ERROR, DEBUG), tự động cuộn (Auto-scroll), tìm kiếm và sao chép toàn bộ log.
+
+---
+
+## 💻 Tech Stack
+
+| Thành phần | Công nghệ sử dụng |
+| :--- | :--- |
+| **Giao diện (Frontend)** | React 19 + Vite 8 + Javascript |
+| **Bố cục & Styling** | Vanilla CSS + Tailwind CSS 4 (`@tailwindcss/vite`) |
+| **Biểu tượng (Icons)** | `@phosphor-icons/react` |
+| **Khung ứng dụng (Core)** | Electron 42 (Frameless window + IPC communication) |
+| **Đăng nhập & Xác thực** | MSAL OAuth2 $\rightarrow$ Xbox Live $\rightarrow$ XSTS $\rightarrow$ Minecraft API |
+| **Mô phỏng 3D** | Three.js / React Three Fiber (Mô hình nhân vật Minecraft) |
+
+---
+
+## 🛠 Phát triển & Đóng gói (Build)
+
+### 1. Cài đặt các thư viện cần thiết:
 ```bash
 npm install
 ```
 
 ### 2. Chạy môi trường phát triển (Development):
+Lệnh này sẽ khởi chạy Vite dev server kết hợp Electron hỗ trợ Hot Module Replacement (HMR):
 ```bash
-npm run electron:dev        # Khởi chạy Vite + Electron với HMR (Hot Module Replacement)
+npm run electron:dev
 ```
 
-### 3. Đóng gói sản phẩm (Build Installer):
-Để biên dịch và đóng gói ứng dụng thành file cài đặt Windows (`Setup.exe` và bản `Portable`), sử dụng lệnh sau:
+### 3. Biên dịch và Đóng gói (Build Installer):
+Đóng gói ứng dụng thành file cài đặt Windows tự động (`Setup.exe`) và bản Portable chạy ngay:
 
-Do chính sách bảo mật PowerShell trên máy của bạn chặn chạy trực tiếp script `npm.ps1`, bạn hãy chạy lệnh đóng gói thông qua Command Prompt (cmd) hoặc dùng hậu tố lệnh đầy đủ:
+* **Chạy bằng Command Prompt (cmd):**
+  ```cmd
+  npm run electron:build
+  ```
+* **Chạy bằng PowerShell:**
+  ```powershell
+  cmd /c "npm run electron:build"
+  ```
 
-**Chạy bằng CMD:**
-```cmd
-npm run electron:build
-```
+Sau khi đóng gói hoàn tất, thư mục `dist-electron/` sẽ xuất hiện:
+* `XForge Setup 0.1.3.exe`: Bộ cài đặt Windows (NSIS, tự động nhắc xóa sạch dữ liệu game khi gỡ cài đặt).
+* `XForge 0.1.3.exe`: Phiên bản Portable chạy ngay không cần cài đặt.
 
-**Hoặc chạy bằng PowerShell:**
-```powershell
-cmd /c "npm run electron:build"
-```
+---
 
-Sau khi chạy xong, kết quả đóng gói sẽ xuất hiện trong thư mục `dist-electron/`:
-- `XForge Setup 0.1.0.exe`: Trình cài đặt tự động NSIS (tự hỏi xóa dữ liệu khi Uninstall).
-- `XForge 0.1.0.exe`: Bản chạy trực tiếp (Portable).
+## 🔒 Lưu trữ dữ liệu & Bảo mật
 
-## Dữ liệu người dùng
+Mọi dữ liệu của XForge được lưu trữ tách biệt hoàn toàn tại `%APPDATA%/XForge/`:
+* `profiles.json`: Danh sách các profile game và cấu hình phiên bản.
+* `accounts.json`: Lưu trữ thông tin đăng nhập. Các mã thông báo bí mật (access token, refresh token) **không bao giờ** được gửi ra frontend, chỉ được xử lý ở main process của Electron và mã hóa bảo vệ.
+* `settings.json`: Lưu trữ tùy chỉnh launcher (RAM, JRE, Discord RPC, hình nền video).
+* `instances/`: Thư mục game `.minecraft` tách biệt cho từng profile.
+* `runtimes/`: Nơi lưu trữ các bộ Java Runtime cài tự động.
 
-Mọi thứ lưu ở `%APPDATA%/XForge/`:
+---
 
-```
-profiles.json     — danh sách profile + selectedProfileId
-accounts.json     — tài khoản Microsoft (đã strip secrets khi trả về UI)
-settings.json     — cài đặt chung (RAM, theme, …)
-instances/<id>/   — thư mục riêng của mỗi profile (.minecraft style)
-runtimes/         — Mojang Java runtime đã cài
-assets/           — asset index + objects (chia sẻ giữa profiles)
-libraries/        — libs chung
-logs/             — game logs
-```
+## 🤝 Credits & Bản quyền
 
-Microsoft access token, refresh token và Minecraft access token **không bao giờ** được gửi lên renderer — chúng chỉ tồn tại trong main process và chỉ ghi vào `accounts.json` (mode 0600).
-
-## Credits
-
-Minecraft is a trademark of Mojang Studios / Microsoft. This project is not affiliated with or endorsed by Mojang.
-
-OAuth2 (XBL → XSTS → Minecraft) flow adapted from publicly documented Microsoft auth endpoints used by all third-party launchers.
-
-## License
-
-Private / unlicensed — do not redistribute.
+* Minecraft thuộc bản quyền của **Mojang Studios / Microsoft**. Dự án này là một trình quản lý bên thứ ba và không liên kết với Mojang.
+* Luồng xác thực tài khoản Microsoft thích ứng từ tài liệu API Xbox Live công khai.
+* Bản quyền dự án: **Private / Unlicensed** — Không tự ý phân phối lại khi chưa có sự đồng ý của tác giả.

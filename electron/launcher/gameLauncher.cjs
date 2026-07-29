@@ -1008,6 +1008,10 @@ function register({ ipcMain, paths, getMainWindow }) {
     killActive()
     return { ok: true }
   })
+
+  ipcMain.handle('launch:getState', () => {
+    return getState()
+  })
 }
 
 const getState = () => ({ phase: currentPhase, profileId: currentRunningProfileId })

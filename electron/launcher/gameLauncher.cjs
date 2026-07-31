@@ -581,13 +581,27 @@ async function resolveLaunchSpec(profile, paths, account, mcToken) {
     }
   }
 
-  // ── FORGE ────────────────────────────────────────────────────────────────
-  if (profile.loader === 'forge') {
-    if (!profile.loaderVersion) throw new Error('Forge profile thiếu loaderVersion')
-    const forgeDir = forgeInstaller.forgeVersionDirName(profile.gameVersion, profile.loaderVersion)
+  // ── FORGE / NEOFORGE ──────────────────────────────────────────────────────
+  if (profile.loader === 'forge' || profile.loader === 'neoforge') {
+    if (!profile.loaderVersion) throw new Error(`${profile.loader === 'neoforge' ? 'NeoForge' : 'Forge'} profile thiếu loaderVersion`)
+    
+    let forgeDir = ''
+    if (profile.loader === 'neoforge') {
+      const versionsDir = path.join(profile.instancePath, 'versions')
+      if (fs.existsSync(versionsDir)) {
+        const folders = fs.readdirSync(versionsDir)
+        forgeDir = folders.find(f => f.toLowerCase().includes('neoforge')) || ''
+      }
+      if (!forgeDir) {
+        forgeDir = `neoforge-${profile.loaderVersion}`
+      }
+    } else {
+      forgeDir = forgeInstaller.forgeVersionDirName(profile.gameVersion, profile.loaderVersion)
+    }
+
     const versionJsonPath = path.join(profile.instancePath, 'versions', forgeDir, `${forgeDir}.json`)
     if (!fs.existsSync(versionJsonPath)) {
-      throw new Error('Chưa cài Forge cho profile này. Bấm "Cài đặt" trước.')
+      throw new Error(`Chưa cài ${profile.loader === 'neoforge' ? 'NeoForge' : 'Forge'} cho profile này. Bấm "Cài đặt" trước.`)
     }
     const forgeJson = JSON.parse(fs.readFileSync(versionJsonPath, 'utf-8'))
 
@@ -842,9 +856,37 @@ async function startSpawn(profile, paths, { getMainWindow, account, mcToken, set
   try {
     spec = await resolveLaunchSpec(profile, paths, account, mcToken)
   } catch (ex) {
-    sendLog({ level: 'ERROR', msg: `Không thể chuẩn bị launch spec: ${ex.message}` })
-    sendState({ phase: 'idle' })
-    return
+    const isMissingFiles = ex.message.includes('Chưa cài') || ex.message.includes('Không tìm thấy') || ex.message.includes('Chưa chuẩn bị')
+    if (isMissingFiles) {
+      sendLog({ level: 'WARN', msg: `Phát hiện thiếu tài nguyên game (${ex.message}). Bắt đầu tự động tải và cài đặt…` })
+      sendState({ phase: 'preparing' })
+      try {
+        const installerHub = require('./installerHub.cjs')
+        await installerHub.prepareInstall(profile, paths, getMainWindow)
+        
+        // Send done progress event to clear installation UI state on frontend
+        const win = getMainWindow()
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('install:progress', {
+            ts: Date.now(),
+            phase: 'done',
+            profileId: profile.id,
+            loader: profile.loader
+          })
+        }
+
+        sendLog({ level: 'INFO', msg: 'Tự động tải và cài đặt game thành công! Đang khởi chạy game…' })
+        spec = await resolveLaunchSpec(profile, paths, account, mcToken)
+      } catch (installErr) {
+        sendLog({ level: 'ERROR', msg: `Tự động tải game thất bại: ${installErr.message}` })
+        sendState({ phase: 'idle' })
+        return
+      }
+    } else {
+      sendLog({ level: 'ERROR', msg: `Không thể chuẩn bị launch spec: ${ex.message}` })
+      sendState({ phase: 'idle' })
+      return
+    }
   }
 
   // ── Authlib-Injector for offline skin/cape ──

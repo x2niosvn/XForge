@@ -8,14 +8,12 @@ import { PageHeader, Card, Button, Badge, ProgressBar, Stat, Select } from './ui
 
 const isElectron = typeof window !== 'undefined' && !!window.electronAPI
 
-export default function SettingsPage({ onSettingsChanged }) {
+export default function SettingsPage({ onSettingsChanged, onOpenJavaModal }) {
   const toast = useToast()
   const [settings, setSettings] = useState(null)
   const [distros, setDistros] = useState([])
   const [installed, setInstalled] = useState([])
   const [paths, setPaths] = useState(null)
-  const [installing, setInstalling] = useState({})
-  const [progress, setProgress] = useState(null)
   const [loading, setLoading] = useState(true)
 
   const reload = async () => {
@@ -35,30 +33,10 @@ export default function SettingsPage({ onSettingsChanged }) {
 
   useEffect(() => { reload() }, [])
 
-  useEffect(() => {
-    if (!isElectron) return
-    const off = window.electronAPI.onJavaInstallProgress((p) => setProgress(p))
-    return () => { try { off && off() } catch {} }
-  }, [])
-
   const update = async (patch) => {
     const next = await window.electronAPI.setSettings(patch)
     setSettings(next)
     onSettingsChanged?.()
-  }
-
-  const installJava = async (pkg) => {
-    setInstalling((m) => ({ ...m, [pkg.component]: true }))
-    setProgress({ stage: 'starting', component: pkg.component })
-    const r = await window.electronAPI.javaInstall(pkg)
-    setInstalling((m) => ({ ...m, [pkg.component]: false }))
-    if (r?.error) {
-      toast.push({ type: 'error', title: 'Cài Java thất bại', message: r.error })
-    } else {
-      toast.push({ type: 'success', title: 'Đã cài Java', message: `${pkg.component} (Java ${pkg.majorVersion}) sẵn sàng.` })
-      await reload()
-    }
-    setProgress(null)
   }
 
   const removeJava = async (j) => {
@@ -159,6 +137,25 @@ export default function SettingsPage({ onSettingsChanged }) {
           desc="Tự động chọn Java theo phiên bản Minecraft: 8 cho ≤1.16, 17 cho 1.17–1.20, 21 cho 1.21+."
         >
           <RecommendationHint />
+          
+          {distros.length > 0 && (
+            <div className="mb-4 flex items-center justify-between gap-4 p-4 rounded-xl bg-bg2/30 border border-line">
+              <div>
+                <div className="text-xs font-bold text-fg uppercase tracking-wider text-accent">Cài đặt tự động toàn bộ JRE</div>
+                <div className="text-xs text-fgfaint mt-1.5">Tải xuống và cấu hình cùng lúc cả 4 phiên bản Java Runtime (Java 8, 17, 21, 25) để chơi mọi phiên bản game.</div>
+              </div>
+              <Button
+                variant={installed.length < distros.length ? 'primary' : 'subtle'}
+                size="sm"
+                onClick={() => onOpenJavaModal?.('all', null, reload)}
+                className="shrink-0 font-semibold"
+              >
+                <DownloadSimple size={13} weight="bold" />
+                {installed.length < distros.length ? 'Cài đặt tất cả' : 'Tải lại toàn bộ'}
+              </Button>
+            </div>
+          )}
+
           <div className="space-y-2">
             {distros.length === 0 && (
               <div className="text-sm text-fgdim flex items-center gap-2">
@@ -168,10 +165,6 @@ export default function SettingsPage({ onSettingsChanged }) {
             )}
             {distros.map((d) => {
               const isInstalled = installed.some((i) => i.component === d.component)
-              const isBusy = !!installing[d.component]
-              const p = progress?.component === d.component ? progress : null
-              const percent = Math.min(100, Math.max(0, Math.round(p?.percent ?? 0)))
-              const showIndet = isBusy && p && (p.stage === 'fetching-manifest' || p.stage === 'starting') && percent === 0
               return (
                 <div
                   key={d.component}
@@ -191,7 +184,7 @@ export default function SettingsPage({ onSettingsChanged }) {
                       </div>
                       <div className="text-[11px] text-fgfaint mt-1 font-mono truncate">{d.version}</div>
                     </div>
-                    <div className="shrink-0">
+                    <div className="shrink-0 flex items-center gap-2">
                       {isInstalled ? (
                         <Button
                           variant="danger-soft"
@@ -205,51 +198,10 @@ export default function SettingsPage({ onSettingsChanged }) {
                           Gỡ
                         </Button>
                       ) : (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          loading={isBusy}
-                          onClick={() => installJava(d)}
-                        >
-                          {!isBusy && <DownloadSimple size={12} weight="bold" />}
-                          Cài đặt
-                        </Button>
+                        <span className="text-xs text-fgfaint font-semibold pr-2">Chưa cài đặt</span>
                       )}
                     </div>
                   </div>
-
-                  {isBusy && p && (
-                    <div className="px-4 py-3 border-t border-line bg-bg2">
-                      <div className="flex items-baseline justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                          {(p.stage === 'fetching-manifest' || p.stage === 'downloading' || p.stage === 'starting') && (
-                            <CircleNotch size={11} className="animate-spin text-accent shrink-0" />
-                          )}
-                          {p.stage === 'done' && (
-                            <CheckCircle size={11} weight="fill" className="text-accent shrink-0" />
-                          )}
-                          <span className="text-[11px] text-fgdim font-mono truncate min-w-0">
-                            {p.stage === 'starting' && 'Đang khởi động…'}
-                            {p.stage === 'fetching-manifest' && 'Đang tải danh sách file…'}
-                            {p.stage === 'downloading' && (p.file ? p.file : `File ${p.done}/${p.total}`)}
-                            {p.stage === 'done' && 'Hoàn tất'}
-                          </span>
-                        </div>
-                        {!showIndet && (
-                          <span className="text-[11px] text-accent font-mono font-semibold tabular-nums shrink-0">
-                            {percent}%
-                          </span>
-                        )}
-                      </div>
-                      <ProgressBar value={percent} indeterminate={showIndet} />
-                      {p.stage === 'downloading' && p.total > 0 && (
-                        <div className="flex items-center justify-between text-[10px] text-fgfaint font-mono tabular-nums mt-1.5">
-                          <span>Đang tải</span>
-                          <span>{p.done.toLocaleString()} / {p.total.toLocaleString()} file</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
                 </div>
               )
             })}

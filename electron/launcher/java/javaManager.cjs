@@ -22,12 +22,31 @@ const JRE_MANIFEST_URL = 'https://launchermeta.mojang.com/v1/products/java-runti
 
 function getJavaComponent(gameVersion) {
   if (typeof gameVersion !== 'string') return 'java-runtime-delta'
-  const minor = parseInt(gameVersion.split('.')[1] || '0', 10)
-  // Year-based versions (25.x, 26.x, …) → java-runtime-epsilon (Java 25)
-  const major = parseInt(gameVersion.split('.')[0] || '0', 10)
+  
+  // 1. Check Mojang snapshot format (e.g. 24w40a, 23w12a)
+  const snapMatch = gameVersion.match(/^(\d+)w\d+[a-z]$/)
+  if (snapMatch) {
+    const year = parseInt(snapMatch[1], 10)
+    if (year >= 25) return 'java-runtime-epsilon' // Java 25 (25w02a+)
+    if (year >= 24) return 'java-runtime-delta'   // Java 21 (24w14a+)
+    if (year >= 21) return 'java-runtime-gamma'   // Java 17 (21w19a+)
+    return 'jre-legacy'
+  }
+
+  // 2. Check standard release format (e.g. 1.20.4, 1.16.5)
+  const parts = gameVersion.split('.')
+  const major = parseInt(parts[0] || '0', 10)
+  const minor = parseInt(parts[1] || '0', 10)
+
+  // Handle future year-based major versions (e.g. 25.x, 26.x)
   if (major >= 25) return 'java-runtime-epsilon'
-  if (minor <= 16) return 'jre-legacy'
-  if (minor <= 20) return 'java-runtime-gamma'
+
+  if (major === 1) {
+    if (minor <= 16) return 'jre-legacy'         // Java 8 (<= 1.16.5)
+    if (minor <= 20) return 'java-runtime-gamma'  // Java 17 (1.17 - 1.20.4)
+    return 'java-runtime-delta'                  // Java 21 (1.20.5 / 1.21+)
+  }
+
   return 'java-runtime-delta'
 }
 

@@ -16,46 +16,12 @@ import { getVersionImage, getVersionGroups, getMajorVersion } from './versionGro
 
 const isElectron = typeof window !== 'undefined' && !!window.electronAPI
 
-export default function ProfilesPage({ profiles, selectedProfileId, reload, onSelect, onPlay, navigate, runningProfileId, playState }) {
+export default function ProfilesPage({ profiles, selectedProfileId, reload, onSelect, onPlay, navigate, runningProfileId, playState, installs = {}, doInstall }) {
   const toast = useToast()
   const [showCreate, setShowCreate] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
   const [editId, setEditId] = useState(null)
   const [managingProfileId, setManagingProfileId] = useState(null)
-
-  // Per-profile install state: { [id]: { phase, percent, current, total, file } }
-  const [installs, setInstalls] = useState({})
-  const completedInstalls = useRef(new Set())
-
-  useEffect(() => {
-    if (!isElectron) return
-    const off = window.electronAPI.onInstallProgress((p) => {
-      if (!p || !p.profileId) return
-      if (completedInstalls.current.has(p.profileId)) return
-      if (p.phase === 'done' || p.phase === 'error' || p.phase === 'cancelled') {
-        completedInstalls.current.add(p.profileId)
-        setInstalls((m) => {
-          const next = { ...m }
-          delete next[p.profileId]
-          return next
-        })
-      } else {
-        setInstalls((m) => {
-          const next = { ...m }
-          next[p.profileId] = {
-            phase: p.phase,
-            percent: typeof p.percent === 'number' ? p.percent : 0,
-            current: p.current || p.done || 0,
-            total: p.total || 0,
-            file: p.file || null,
-            label: p.label || p.msg || null,
-          }
-          return next
-        })
-      }
-    })
-    return () => { try { off && off() } catch {} }
-  }, [])
 
   const doDelete = async (id) => {
     const r = await window.electronAPI.deleteProfile(id)
@@ -63,21 +29,6 @@ export default function ProfilesPage({ profiles, selectedProfileId, reload, onSe
     toast.push({ type: 'success', message: 'Đã xoá profile.' })
     setDeleteId(null)
     await reload()
-  }
-
-  const doInstall = async (id) => {
-    if (installs[id]) return
-    completedInstalls.current.delete(id)
-    setInstalls((m) => ({ ...m, [id]: { phase: 'starting', percent: 0 } }))
-    const r = await window.electronAPI.prepareInstall(id)
-    completedInstalls.current.add(id)
-    setInstalls((m) => { const next = { ...m }; delete next[id]; return next })
-    if (r?.error) {
-      toast.push({ type: 'error', title: 'Cài đặt thất bại', message: r.error, timeout: 8000 })
-    } else {
-      toast.push({ type: 'success', message: 'Đã chuẩn bị xong profile.' })
-      await reload()
-    }
   }
 
   const managingProfile = profiles.find(p => p.id === managingProfileId)

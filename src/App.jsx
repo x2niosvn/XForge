@@ -7,6 +7,7 @@ import AccountsPage from './components/AccountsPage.jsx'
 import SettingsPage from './components/SettingsPage.jsx'
 import PlayPage from './components/PlayPage.jsx'
 import ModsPage from './components/ModsPage.jsx'
+import JavaDownloadModal from './components/JavaDownloadModal.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { AccountsProvider } from './hooks/useAccounts.jsx'
 import { ToastProvider, useToast } from './hooks/useToast.jsx'
@@ -76,6 +77,85 @@ function AppInner() {
   const startedAtRef = useRef(null)
   const toast = useToast()
 
+  const [javaModalOpen, setJavaModalOpen] = useState(false)
+  const [javaModalMode, setJavaModalMode] = useState('all')
+  const [javaModalGameVer, setJavaModalGameVer] = useState(null)
+  const [javaModalComponent, setJavaModalComponent] = useState(null)
+  const [javaSuccessCallback, setJavaSuccessCallback] = useState(null)
+
+  const [installs, setInstalls] = useState({})
+  const completedInstalls = useRef(new Set())
+
+  useEffect(() => {
+    if (!isElectron) return
+    window.electronAPI.javaGetInstalled().then((res) => {
+      const inst = res?.installed || []
+      if (inst.length === 0) {
+        setJavaModalMode('all')
+        setJavaModalOpen(true)
+      }
+    }).catch((err) => console.error('Lỗi check java khi khởi động:', err))
+  }, [])
+
+  useEffect(() => {
+    if (!isElectron) return
+    const off = window.electronAPI.onInstallProgress((p) => {
+      if (!p || !p.profileId) return
+      if (completedInstalls.current.has(p.profileId)) return
+      if (p.phase === 'done' || p.phase === 'error' || p.phase === 'cancelled') {
+        completedInstalls.current.add(p.profileId)
+        setInstalls((m) => {
+          const next = { ...m }
+          delete next[p.profileId]
+          return next
+        })
+      } else {
+        setInstalls((m) => {
+          const next = { ...m }
+          next[p.profileId] = {
+            phase: p.phase,
+            percent: typeof p.percent === 'number' ? p.percent : 0,
+            current: p.current || p.done || 0,
+            total: p.total || 0,
+            file: p.file || null,
+            label: p.label || p.msg || null,
+          }
+          return next
+        })
+      }
+    })
+    return () => { try { off && off() } catch {} }
+  }, [])
+
+  const reload = useCallback(async () => {
+    if (!isElectron) { setLoading(false); return }
+    try {
+      const r = await window.electronAPI.getProfiles()
+      setProfilesData(r || { profiles: [], selectedProfileId: null })
+    } catch (ex) {
+      toast.push({ type: 'error', title: 'Lỗi tải profiles', message: ex.message })
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
+
+  const doInstall = useCallback(async (id) => {
+    if (installs[id]) return false
+    completedInstalls.current.delete(id)
+    setInstalls((m) => ({ ...m, [id]: { phase: 'starting', percent: 0 } }))
+    const r = await window.electronAPI.prepareInstall(id)
+    completedInstalls.current.add(id)
+    setInstalls((m) => { const next = { ...m }; delete next[id]; return next })
+    if (r?.error) {
+      toast.push({ type: 'error', title: 'Cài đặt thất bại', message: r.error, timeout: 8000 })
+      return false
+    } else {
+      toast.push({ type: 'success', message: 'Đã chuẩn bị xong profile.' })
+      await reload()
+      return true
+    }
+  }, [installs, toast, reload])
+
   useEffect(() => {
     if (!isElectron) return
     const offLog = window.electronAPI.onLog((line) => {
@@ -106,18 +186,6 @@ function AppInner() {
     setActivePage(page)
     setPageContext(context)
   }, [])
-
-  const reload = useCallback(async () => {
-    if (!isElectron) { setLoading(false); return }
-    try {
-      const r = await window.electronAPI.getProfiles()
-      setProfilesData(r || { profiles: [], selectedProfileId: null })
-    } catch (ex) {
-      toast.push({ type: 'error', title: 'Lỗi tải profiles', message: ex.message })
-    } finally {
-      setLoading(false)
-    }
-  }, [toast])
 
   useEffect(() => { reload() }, [reload])
 
@@ -186,12 +254,35 @@ function AppInner() {
             navigate={navigate}
             runningProfileId={runningProfileId}
             playState={playState}
+            installs={installs}
+            doInstall={doInstall}
           />
         )
       case 'accounts':
         return <AccountsPage />
       case 'settings':
-        return <SettingsPage onSettingsChanged={reloadSettings} />
+        return (
+          <SettingsPage
+            onSettingsChanged={reloadSettings}
+            onOpenJavaModal={(mode, target, cb) => {
+              setJavaModalMode(mode)
+              if (mode === 'single') {
+                if (target.includes('.')) {
+                  setJavaModalGameVer(target)
+                  setJavaModalComponent(null)
+                } else {
+                  setJavaModalComponent(target)
+                  setJavaModalGameVer(null)
+                }
+              } else {
+                setJavaModalGameVer(null)
+                setJavaModalComponent(null)
+              }
+              setJavaSuccessCallback(() => cb)
+              setJavaModalOpen(true)
+            }}
+          />
+        )
       case 'play':
         return (
           <PlayPage
@@ -205,6 +296,15 @@ function AppInner() {
             state={playState}
             setState={setPlayState}
             startedAtRef={startedAtRef}
+            onRequireJava={() => {
+              setJavaModalGameVer(null)
+              setJavaModalComponent(null)
+              setJavaModalMode('all')
+              setJavaSuccessCallback(null)
+              setJavaModalOpen(true)
+            }}
+            installState={installs[profilesData.selectedProfileId]}
+            doInstall={doInstall}
           />
         )
       case 'mods':
@@ -253,6 +353,20 @@ function AppInner() {
           {render()}
         </div>
       </div>
+
+      <JavaDownloadModal
+        isOpen={javaModalOpen}
+        onClose={() => setJavaModalOpen(false)}
+        mode={javaModalMode}
+        gameVersion={javaModalGameVer}
+        component={javaModalComponent}
+        onSuccess={() => {
+          toast.push({ type: 'success', message: 'Tải Java Runtime thành công!' })
+          if (javaSuccessCallback) {
+            javaSuccessCallback()
+          }
+        }}
+      />
     </div>
   )
 }

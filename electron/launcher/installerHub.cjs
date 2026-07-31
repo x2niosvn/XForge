@@ -30,6 +30,8 @@ const optifineInstaller  = require('./optifine/optifineInstaller.cjs')
 const fabricMeta         = require('./fabric/fabricMeta.cjs')
 const forgeVersions      = require('./forge/forgeVersions.cjs')
 
+const javaManager        = require('./java/javaManager.cjs')
+
 function sendProgress(getMainWindow, evt) {
   const win = getMainWindow?.()
   if (win && !win.isDestroyed()) {
@@ -87,6 +89,19 @@ async function prepareInstall(profile, paths, getMainWindow) {
       (p) => sendProgress(getMainWindow, { phase: 'progress', profileId: profile.id, ...p }))
     // Place vanilla client.jar at versions/<mc>/<mc>.jar so Fabric launcher can patch Mojang mappings
     vanillaInstaller.placeClientJarForLoader(profile, paths, vanillaMeta)
+  } else if (profile.loader === 'neoforge') {
+    const neoforgeLoader = require('./neoforge/neoforgeLoader.cjs')
+    const java = javaManager.resolveJavaForVersion(profile.gameVersion, paths.RUNTIMES_DIR, null)
+    const javaPath = java ? java.exe : 'java'
+    await neoforgeLoader.setupNeoForge(
+      profile.gameVersion,
+      profile.loaderVersion,
+      paths.LIBRARIES_DIR,
+      vanillaPrep?.clientJar || path.join(paths.INSTANCES_DIR, '__runtime', profile.id, `${profile.id}-${profile.gameVersion}-client.jar`),
+      javaPath,
+      profile.instancePath,
+      (p) => sendProgress(getMainWindow, { phase: 'progress', profileId: profile.id, ...p })
+    )
   } else if (profile.loader === 'optifine') {
     await optifineInstaller.prepare(profile, paths, sendLog,
       (p) => sendProgress(getMainWindow, { phase: 'progress', profileId: profile.id, ...p }))

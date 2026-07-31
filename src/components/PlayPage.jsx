@@ -20,7 +20,7 @@ const LEVEL_STYLES = {
 
 const MAX_LINES = 5000
 
-export default function PlayPage({ profiles, selectedProfileId, onNavigate, reload, onSelectProfile, logs, setLogs, state, setState, startedAtRef }) {
+export default function PlayPage({ profiles, selectedProfileId, onNavigate, reload, onSelectProfile, logs, setLogs, state, setState, startedAtRef, onRequireJava, installState, doInstall }) {
   const { selectedAccount } = useAccounts()
   const toast = useToast()
   const profile = profiles.find((p) => p.id === selectedProfileId) || profiles[0]
@@ -56,6 +56,20 @@ export default function PlayPage({ profiles, selectedProfileId, onNavigate, relo
       onNavigate?.('accounts')
       return
     }
+
+    // 1. Auto prepare/install if not installed yet
+    if (!profile.installedAt) {
+      toast.push({ type: 'info', message: 'Bắt đầu tự động tải và cài đặt game...' })
+      const ok = await doInstall?.(profile.id)
+      if (!ok) return
+    }
+
+    const checkJava = await window.electronAPI.javaGetForVersion(profile.gameVersion)
+    if (!checkJava?.found) {
+      onRequireJava?.()
+      return
+    }
+
     setLogs([])
     // Optimistic: shows the spinner immediately. Main process will
     // overwrite this with 'launching' / 'running' / 'idle' as it works.
@@ -68,7 +82,7 @@ export default function PlayPage({ profiles, selectedProfileId, onNavigate, relo
     // Don't setState('launching') here — the main process emits its own
     // state events and would race with this one, causing the UI to get
     // stuck on "Đang chuẩn bị…" forever.
-  }, [profile, selectedAccount, onNavigate, toast, setLogs, setState])
+  }, [profile, selectedAccount, onNavigate, toast, setLogs, setState, onRequireJava, doInstall])
 
   const kill = useCallback(async () => {
     await window.electronAPI.killGame()
@@ -142,7 +156,21 @@ export default function PlayPage({ profiles, selectedProfileId, onNavigate, relo
                 Đang chạy · {formatElapsed(elapsed)}
               </div>
             )}
-            {isLaunching && (
+            {installState && state !== 'running' && (
+              <div className="mt-2 text-xs text-fgdim flex flex-col gap-1 w-64">
+                <div className="flex items-center gap-1.5 truncate">
+                  <CircleNotch size={11} className="animate-spin text-accent shrink-0" />
+                  <span className="truncate">{installState.label || installState.phase}</span>
+                </div>
+                <ProgressBar value={installState.percent} />
+                {installState.total > 0 && (
+                  <div className="text-[10px] text-fgfaint font-mono tabular-nums mt-0.5">
+                    {installState.current.toLocaleString()} / {installState.total.toLocaleString()} file
+                  </div>
+                )}
+              </div>
+            )}
+            {!installState && isLaunching && (
               <div className="mt-2 flex items-center gap-2 text-xs text-fgdim">
                 <CircleNotch size={12} className="animate-spin text-accent" />
                 {state === 'preparing' ? 'Đang chuẩn bị tài nguyên…' : 'Đang khởi chạy…'}
@@ -150,7 +178,12 @@ export default function PlayPage({ profiles, selectedProfileId, onNavigate, relo
             )}
           </div>
 
-          {state === 'idle' && (
+          {installState && state !== 'running' ? (
+            <div className="flex items-center gap-2 text-sm text-fgdim px-4">
+              <CircleNotch size={16} className="animate-spin text-accent" />
+              Đang tải game… {installState.percent > 0 ? `${installState.percent}%` : ''}
+            </div>
+          ) : state === 'idle' && (
             <Button
               variant="primary"
               size="lg"
@@ -161,13 +194,13 @@ export default function PlayPage({ profiles, selectedProfileId, onNavigate, relo
               Chơi
             </Button>
           )}
-          {(state === 'preparing' || state === 'launching') && (
+          {!installState && (state === 'preparing' || state === 'launching') && (
             <div className="flex items-center gap-2 text-sm text-fgdim px-4">
               <CircleNotch size={16} className="animate-spin text-accent" />
               Đang chuẩn bị…
             </div>
           )}
-          {state === 'running' && (
+          {!installState && state === 'running' && (
             <Button variant="danger" size="lg" onClick={kill}>
               <Stop size={14} weight="fill" />
               Đang chạy — Dừng

@@ -1,11 +1,28 @@
 # XForge - Minecraft Client & Profile Manager
 
 <p align="center">
-  <img src="src/assets/loader/forge.png" width="120" alt="XForge Logo" />
+  <img src="build-resources/icon.png" width="120" alt="XForge Logo" />
 </p>
 
 <p align="center">
   Trình quản lý và khởi chạy Minecraft (Launcher) tối giản, hiện đại xây dựng trên Electron + React. Hỗ trợ giao diện kính mờ (Glassmorphism), hình nền video động, xác thực Microsoft chính thức và quản lý Java Runtime tự động.
+</p>
+
+---
+
+## Trải nghiệm Giao diện (Screenshots)
+
+<p align="center">
+  <img src="IMAGE_LAUCHER/01.png" width="48%" alt="Trang chủ & Khởi chạy" />
+  <img src="IMAGE_LAUCHER/02.png" width="48%" alt="Quản lý Profiles" />
+</p>
+<p align="center">
+  <img src="IMAGE_LAUCHER/03.png" width="48%" alt="Khám phá & Tải Mods" />
+  <img src="IMAGE_LAUCHER/04.png" width="48%" alt="Quản lý Tài khoản & Skin 3D" />
+</p>
+<p align="center">
+  <img src="IMAGE_LAUCHER/05.png" width="48%" alt="Cài đặt hệ thống & Java" />
+  <img src="IMAGE_LAUCHER/06.png" width="48%" alt="Trình quản lý Mod chi tiết" />
 </p>
 
 ---

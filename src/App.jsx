@@ -189,6 +189,22 @@ function AppInner() {
 
   useEffect(() => { reload() }, [reload])
 
+  // Automatically clean up any hanging install progress state for profiles that are already marked as installed
+  useEffect(() => {
+    if (!profilesData.profiles || profilesData.profiles.length === 0) return
+    setInstalls((prev) => {
+      let changed = false
+      const next = { ...prev }
+      for (const p of profilesData.profiles) {
+        if (p.installedAt && next[p.id]) {
+          delete next[p.id]
+          changed = true
+        }
+      }
+      return changed ? next : prev
+    })
+  }, [profilesData.profiles])
+
   // When the main process updates a profile (e.g. stamps lastPlayed on
   // game exit), the renderer must re-fetch so the UI shows fresh data.
   useEffect(() => {

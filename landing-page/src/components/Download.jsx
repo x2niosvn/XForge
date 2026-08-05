@@ -1,111 +1,71 @@
 import React from 'react';
-import { DownloadSimple, FileZip, Laptop, CheckCircle } from '@phosphor-icons/react';
+import { DownloadSimple, Laptop, CheckCircle, ShieldCheck } from '@phosphor-icons/react';
 
 export default function Download() {
   return (
-    <section id="download" className="py-24 relative overflow-hidden">
+    <section id="download" className="py-28 relative overflow-hidden">
+      {/* Decorative gradients */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-[#45f3ff]/10 to-[#bd00ff]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight">
-            Sẵn Sàng Trải Nghiệm 
-            <span className="block mt-2 bg-gradient-to-r from-[#45f3ff] to-[#bd00ff] bg-clip-text text-transparent">
-              Minecraft Theo Cách Mới?
-            </span>
-          </h2>
-          <p className="mt-4 text-slate-400">
-            Tải XForge ngay hôm nay hoàn toàn miễn phí và bắt đầu hành trình sinh tồn của bạn.
-          </p>
-        </div>
-
-        {/* Download Options */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        {/* Single Massive Call-to-Action Card */}
+        <div className="relative glass p-8 sm:p-14 rounded-3xl border-white/10 text-center overflow-hidden shadow-2xl hover:border-[#45f3ff]/30 transition-all duration-500 group">
+          {/* Animated gradient border glow */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#45f3ff]/5 via-transparent to-[#bd00ff]/5 opacity-50 pointer-events-none" />
           
-          {/* Card 1: Setup Installer */}
-          <div className="glass p-8 sm:p-10 rounded-2xl border-white/10 relative flex flex-col justify-between hover:border-[#45f3ff]/40 transition-all duration-300 group">
-            <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-[#45f3ff]/10 border border-[#45f3ff]/20 text-[#45f3ff] text-[10px] font-bold uppercase tracking-wider">
-              Khuyên dùng
-            </div>
+          <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
             
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-[#45f3ff]/10 flex items-center justify-center text-[#45f3ff] mb-6">
-                <Laptop size={28} weight="duotone" />
-              </div>
-              <h3 className="font-display font-bold text-xl sm:text-2xl text-white mb-2">
-                Setup Installer
-              </h3>
-              <p className="text-slate-400 text-sm sm:text-base mb-6 leading-relaxed">
-                Tự động cài đặt và cấu hình môi trường. Tích hợp sẵn cơ chế tự động cập nhật phiên bản mới nhất khi khởi chạy.
-              </p>
-              
-              <ul className="space-y-3 mb-8 text-sm text-slate-300">
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-[#45f3ff]" weight="fill" />
-                  Hỗ trợ Windows 10 & 11 (64-bit)
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-[#45f3ff]" weight="fill" />
-                  Tự động cập nhật (Auto-updater)
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-[#45f3ff]" weight="fill" />
-                  Dung lượng file: ~85 MB
-                </li>
-              </ul>
+            {/* Small icon badge */}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#45f3ff]/10 to-[#00a8ff]/10 border border-[#45f3ff]/20 flex items-center justify-center text-[#45f3ff] mb-8 animate-float">
+              <Laptop size={32} weight="duotone" />
             </div>
 
-            <a 
-              href="#" 
-              onClick={(e) => { e.preventDefault(); alert('Liên kết tải xuống sẽ khả dụng sau khi bạn hoàn tất build release trong Electron.'); }}
-              className="flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-gradient-to-r from-[#45f3ff] to-[#00a8ff] text-[#0b0c10] font-bold hover:shadow-[0_0_25px_rgba(69,243,255,0.4)] transition-all"
-            >
-              <DownloadSimple size={20} weight="bold" />
-              Tải Installer (.exe)
-            </a>
-          </div>
+            <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight">
+              Tải XForge Launcher Ngay
+            </h2>
+            
+            <p className="mt-4 text-slate-400 text-base sm:text-lg max-w-xl leading-relaxed">
+              Bắt đầu hành trình Minecraft của bạn với trình khởi chạy tối giản, an toàn và tối tân nhất hiện nay.
+            </p>
 
-          {/* Card 2: Portable Version */}
-          <div className="glass p-8 sm:p-10 rounded-2xl border-white/10 flex flex-col justify-between hover:border-[#bd00ff]/40 transition-all duration-300 group">
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-[#bd00ff]/10 flex items-center justify-center text-[#bd00ff] mb-6">
-                <FileZip size={28} weight="duotone" />
-              </div>
-              <h3 className="font-display font-bold text-xl sm:text-2xl text-white mb-2">
-                Portable Version
-              </h3>
-              <p className="text-slate-400 text-sm sm:text-base mb-6 leading-relaxed">
-                Giải nén là chạy ngay không cần cài đặt. Phù hợp để lưu trữ trong USB hoặc chạy nhanh trên mọi thiết bị.
-              </p>
+            {/* Downloader CTA Block */}
+            <div className="mt-10 w-full max-w-md">
+              <a 
+                href="https://github.com/x2niosvn/XForge/releases" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative group overflow-hidden flex items-center justify-center gap-3 w-full py-4.5 rounded-2xl bg-gradient-to-r from-[#45f3ff] via-[#00a8ff] to-[#bd00ff] text-[#0b0c10] font-extrabold text-base hover:shadow-[0_0_40px_rgba(69,243,255,0.6)] transition-all transform hover:-translate-y-1"
+              >
+                <span className="absolute inset-0 w-full h-full bg-white/10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                <DownloadSimple size={22} weight="bold" />
+                Tải về Windows Installer (.exe)
+              </a>
               
-              <ul className="space-y-3 mb-8 text-sm text-slate-300">
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-[#bd00ff]" weight="fill" />
-                  Không cần quyền Administrator
-                  </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-[#bd00ff]" weight="fill" />
-                  Giữ nguyên dữ liệu tại chỗ
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-[#bd00ff]" weight="fill" />
-                  Dung lượng file: ~90 MB
-                </li>
-              </ul>
+              <div className="mt-4 flex items-center justify-center gap-2 text-slate-500 text-xs">
+                <ShieldCheck size={16} className="text-[#27c93f]" weight="fill" />
+                <span>Bản phát hành chính thức từ GitHub Releases</span>
+              </div>
             </div>
 
-            <a 
-              href="#" 
-              onClick={(e) => { e.preventDefault(); alert('Liên kết tải xuống sẽ khả dụng sau khi bạn hoàn tất build release trong Electron.'); }}
-              className="flex items-center justify-center gap-2 w-full py-4 rounded-xl glass border-white/15 text-white font-bold hover:border-[#bd00ff]/40 hover:bg-white/5 transition-all"
-            >
-              <DownloadSimple size={20} weight="bold" />
-              Tải Portable (.zip)
-            </a>
-          </div>
+            {/* Technical checklist */}
+            <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6 w-full border-t border-white/5 pt-8 text-left text-sm text-slate-300">
+              <div className="flex items-center gap-3">
+                <CheckCircle size={18} className="text-[#45f3ff] shrink-0" weight="fill" />
+                <span>Hệ điều hành Windows 10/11</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle size={18} className="text-[#45f3ff] shrink-0" weight="fill" />
+                <span>Hỗ trợ tự động cập nhật</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle size={18} className="text-[#45f3ff] shrink-0" weight="fill" />
+                <span>An toàn & Không quảng cáo</span>
+              </div>
+            </div>
 
+          </div>
         </div>
 
       </div>

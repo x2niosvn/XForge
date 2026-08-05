@@ -42,6 +42,24 @@
   transform: translateY(-4px);
 }
 
+@keyframes scale-up-fade {
+  from { opacity: 0.1; transform: scale(0.975); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-scale-up-fade {
+  animation: scale-up-fade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
@@ -56,3 +74,4 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #45f3ff;
 }
+

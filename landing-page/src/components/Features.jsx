@@ -1,5 +1,5 @@
 import React from 'react';
-import { PaintBrush, Cpu, Folder, PuzzlePiece, User, Terminal } from '@phosphor-icons/react';
+import { PaintBrush, Cpu, Folder, PuzzlePiece, User, Terminal, Sparkle } from '@phosphor-icons/react';
 
 const features = [
   {
@@ -36,14 +36,20 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-24 relative overflow-hidden bg-black/20">
+    <section id="features" className="py-24 relative overflow-hidden bg-black/35">
+      <div className="absolute top-0 right-1/4 w-80 h-80 bg-[#45f3ff]/5 rounded-full blur-[120px] pointer-events-none" />
+      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-20">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-slate-300 text-xs font-semibold uppercase tracking-wider mb-4">
+            <Sparkle size={12} className="text-[#45f3ff]" />
+            Tính năng đột phá
+          </div>
           <h2 className="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white tracking-tight">
             Trải nghiệm tối tân, 
-            <span className="block mt-2 bg-gradient-to-r from-[#45f3ff] to-[#00a8ff] bg-clip-text text-transparent">
+            <span className="block mt-2 bg-gradient-to-r from-[#45f3ff] to-[#bd00ff] bg-clip-text text-transparent">
               Đầy đủ mọi tính năng bạn cần
             </span>
           </h2>
@@ -57,15 +63,20 @@ export default function Features() {
           {features.map((feature, idx) => (
             <div 
               key={idx}
-              className="glass glass-hover p-8 rounded-2xl flex flex-col items-start"
+              className="group relative glass p-8 rounded-2xl flex flex-col items-start overflow-hidden hover:border-[#45f3ff]/30 transition-all duration-500 hover:-translate-y-1.5 shadow-xl hover:shadow-[#45f3ff]/5"
             >
-              <div className="p-3 rounded-xl bg-white/5 border border-white/10 mb-6">
+              {/* Radial Hover Gradient Background */}
+              <div className="absolute -inset-px bg-gradient-to-tr from-[#45f3ff]/10 to-[#bd00ff]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none" />
+              
+              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 mb-6 group-hover:border-[#45f3ff]/40 group-hover:bg-[#45f3ff]/5 transition-all duration-500 relative z-10">
                 {feature.icon}
               </div>
-              <h3 className="font-display font-semibold text-lg sm:text-xl text-white mb-3">
+              
+              <h3 className="font-display font-semibold text-lg sm:text-xl text-white mb-3 relative z-10 transition-colors duration-300 group-hover:text-white">
                 {feature.title}
               </h3>
-              <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+              
+              <p className="text-slate-400 text-sm sm:text-base leading-relaxed relative z-10 transition-colors duration-300 group-hover:text-slate-300">
                 {feature.description}
               </p>
             </div>

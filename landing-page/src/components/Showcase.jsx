@@ -83,9 +83,10 @@ export default function Showcase() {
               {/* Main Image */}
               <div className="relative w-full h-[calc(100%-24px)] rounded-b-xl overflow-hidden bg-slate-900">
                 <img 
+                  key={activeIndex}
                   src={screenshots[activeIndex].src} 
                   alt={screenshots[activeIndex].title} 
-                  className="w-full h-full object-cover object-top transition-all duration-500 ease-out"
+                  className="w-full h-full object-cover object-top animate-scale-up-fade"
                 />
               </div>
 

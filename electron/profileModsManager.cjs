@@ -134,11 +134,11 @@ function parseFilenameFallback(filename) {
 function register({ ipcMain, files, readJson }) {
   const { PROFILES_FILE, INSTANCES_DIR } = files
 
-  // List mods
-  ipcMain.handle('profiles:listMods', async (_e, profileId) => {
+  ipcMain.handle('profiles:listMods', async (_e, profileId, options = {}) => {
+    const { page = 1, pageSize = 10, search = '' } = options
     const data = readProfiles(PROFILES_FILE)
     const profile = data.profiles.find((p) => p.id === profileId)
-    if (!profile) return []
+    if (!profile) return { mods: [], total: 0 }
 
     const instancePath = profile.instancePath || path.join(INSTANCES_DIR, profileId)
     const modsDir = path.join(instancePath, 'mods')
@@ -147,37 +147,89 @@ function register({ ipcMain, files, readJson }) {
       try {
         fs.mkdirSync(modsDir, { recursive: true })
       } catch {
-        return []
+        return { mods: [], total: 0 }
       }
     }
 
     try {
+      const cachePath = path.join(instancePath, '.xforge_mods_cache.json')
+      let cache = {}
+      try {
+        if (fs.existsSync(cachePath)) {
+          cache = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+        }
+      } catch (e) {}
+
+      let cacheUpdated = false
+
       const filesInDir = fs.readdirSync(modsDir)
       const modFiles = filesInDir.filter(f => f.endsWith('.jar') || f.endsWith('.jar.disabled'))
 
+      // Filter by search query (checks filename or cached mod display name)
+      let filteredFiles = modFiles
+      if (search) {
+        const query = search.toLowerCase()
+        filteredFiles = modFiles.filter(f => {
+          const fileMatch = f.toLowerCase().includes(query)
+          const cacheMatch = cache[f]?.metadata?.name?.toLowerCase()?.includes(query)
+          return fileMatch || cacheMatch
+        })
+      }
+
+      // Sort files alphabetically to ensure consistent pagination ordering
+      filteredFiles.sort((a, b) => a.localeCompare(b))
+
+      const total = filteredFiles.length
+      const startIndex = (page - 1) * pageSize
+      const endIndex = Math.min(startIndex + pageSize, total)
+      const pageFiles = filteredFiles.slice(startIndex, endIndex)
+
       const list = []
-      for (const filename of modFiles) {
+      const processFile = async (filename) => {
         const fullPath = path.join(modsDir, filename)
         const enabled = !filename.endsWith('.disabled')
-        let metadata = null
-        try {
-          metadata = await getModMetadata(fullPath)
-        } catch (ex) {
-          // ignore error and let fallback handle it
-        }
-
-        if (!metadata || !metadata.name) {
-          metadata = parseFilenameFallback(filename)
-        }
 
         let stat = { size: 0, mtimeMs: 0 }
         try {
           const s = fs.statSync(fullPath)
           stat.size = s.size
-          stat.mtimeMs = s.mtimeMs
+          stat.mtimeMs = Math.round(s.mtimeMs)
         } catch {}
 
-        list.push({
+        // Check cache first
+        const cachedItem = cache[filename]
+        if (cachedItem && cachedItem.size === stat.size && Math.round(cachedItem.mtimeMs) === stat.mtimeMs && cachedItem.metadata) {
+          return {
+            filename,
+            enabled,
+            name: cachedItem.metadata.name,
+            id: cachedItem.metadata.id,
+            version: cachedItem.metadata.version,
+            description: cachedItem.metadata.description,
+            loader: cachedItem.metadata.loader || 'unknown',
+            sizeBytes: stat.size,
+            updatedAt: stat.mtimeMs
+          }
+        }
+
+        // Parse from ZIP if modified/not cached
+        let metadata = null
+        try {
+          metadata = await getModMetadata(fullPath)
+        } catch (ex) {}
+
+        if (!metadata || !metadata.name) {
+          metadata = parseFilenameFallback(filename)
+        }
+
+        cache[filename] = {
+          size: stat.size,
+          mtimeMs: Math.round(stat.mtimeMs),
+          metadata
+        }
+        cacheUpdated = true
+
+        return {
           filename,
           enabled,
           name: metadata.name,
@@ -187,18 +239,34 @@ function register({ ipcMain, files, readJson }) {
           loader: metadata.loader || 'unknown',
           sizeBytes: stat.size,
           updatedAt: stat.mtimeMs
-        })
+        }
       }
 
-      // Sort by status (enabled first) and then name alphabetically
-      return list.sort((a, b) => {
+      // Scan pageFiles in parallel (only max 10 files, extremely fast!)
+      const scanPromises = pageFiles.map(f => processFile(f))
+      const results = await Promise.all(scanPromises)
+      list.push(...results)
+
+      if (cacheUpdated) {
+        try {
+          fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2), 'utf-8')
+        } catch (err) {}
+      }
+
+      // Sort current page items by status (enabled first) and then name
+      const sortedMods = list.sort((a, b) => {
         if (a.enabled !== b.enabled) {
           return a.enabled ? -1 : 1
         }
         return a.name.localeCompare(b.name)
       })
+
+      return {
+        mods: sortedMods,
+        total
+      }
     } catch {
-      return []
+      return { mods: [], total: 0 }
     }
   })
 

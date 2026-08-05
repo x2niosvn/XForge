@@ -865,6 +865,8 @@ function LoaderVersionList({ loader, gameVersion, selectedVersion, onSelect }) {
 function ProfileDetailView({ profile, onBack, navigate, onPlay, reload }) {
   const toast = useToast()
   const [mods, setMods] = useState([])
+  const [totalMods, setTotalMods] = useState(0)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
   const [deletingModFile, setDeletingModFile] = useState(null)
@@ -874,14 +876,15 @@ function ProfileDetailView({ profile, onBack, navigate, onPlay, reload }) {
     if (profile.loader === 'vanilla') return
     setLoading(true)
     try {
-      const r = await window.electronAPI.listMods(profile.id)
-      setMods(r || [])
+      const r = await window.electronAPI.listMods(profile.id, { page, pageSize: 10, search })
+      setMods(r?.mods || [])
+      setTotalMods(r?.total || 0)
     } catch (err) {
       toast.push({ type: 'error', message: 'Không thể tải danh sách mod: ' + err.message })
     } finally {
       setLoading(false)
     }
-  }, [profile.id, profile.loader, toast])
+  }, [profile.id, profile.loader, page, search, toast])
 
   useEffect(() => {
     loadMods()
@@ -912,20 +915,18 @@ function ProfileDetailView({ profile, onBack, navigate, onPlay, reload }) {
         toast.push({ type: 'error', message: r.error })
       } else {
         toast.push({ type: 'success', message: 'Đã xóa mod thành công.' })
-        await loadMods()
+        // If it was the last item on the page, go to previous page
+        if (mods.length === 1 && page > 1) {
+          setPage(p => p - 1)
+        } else {
+          await loadMods()
+        }
       }
       setDeletingModFile(null)
     } catch (err) {
       toast.push({ type: 'error', message: err.message })
     }
   }
-
-  const filteredMods = mods.filter(mod => {
-    const s = search.toLowerCase()
-    return mod.name.toLowerCase().includes(s) || 
-           mod.filename.toLowerCase().includes(s) || 
-           (mod.description && mod.description.toLowerCase().includes(s))
-  })
 
   const isVanilla = profile.loader === 'vanilla'
 
@@ -1003,7 +1004,10 @@ function ProfileDetailView({ profile, onBack, navigate, onPlay, reload }) {
                 <input
                   type="text"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value)
+                    setPage(1)
+                  }}
                   placeholder="Tìm mod trong máy..."
                   className="w-full pl-9 pr-4 py-1.5 text-xs bg-bg2 rounded-lg ring-1 ring-line text-fg placeholder:text-fgfaint focus:outline-none focus:ring-accent/50 transition-colors"
                 />
@@ -1034,102 +1038,132 @@ function ProfileDetailView({ profile, onBack, navigate, onPlay, reload }) {
             ) : mods.length === 0 ? (
               <EmptyState
                 icon={<PuzzlePiece size={24} />}
-                title="Thư mục mod trống"
-                desc="Chưa có mod nào trong profile này. Hãy nhấn tìm thêm mod để tải các mod phù hợp với phiên bản này."
+                title={search ? "Không tìm thấy kết quả" : "Thư mục mod trống"}
+                desc={search ? `Không có mod nào khớp với từ khóa "${search}".` : "Chưa có mod nào trong profile này. Hãy nhấn tìm thêm mod để tải các mod phù hợp với phiên bản này."}
                 action={
-                  <Button
-                    variant="primary"
-                    size="md"
-                    onClick={() => navigate('mods', {
-                      profileId: profile.id,
-                      loader: profile.loader,
-                      gameVersion: profile.gameVersion,
-                      profileName: profile.name
-                    })}
-                  >
-                    <Plus size={14} weight="bold" />
-                    Tải mod đầu tiên
-                  </Button>
+                  !search && (
+                    <Button
+                      variant="primary"
+                      size="md"
+                      onClick={() => navigate('mods', {
+                        profileId: profile.id,
+                        loader: profile.loader,
+                        gameVersion: profile.gameVersion,
+                        profileName: profile.name
+                      })}
+                    >
+                      <Plus size={14} weight="bold" />
+                      Tải mod đầu tiên
+                    </Button>
+                  )
                 }
               />
-            ) : filteredMods.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-line rounded-xl bg-bg1/20 text-fgdim text-sm">
-                Không tìm thấy mod nào khớp với "{search}"
-              </div>
             ) : (
-              <Card className="overflow-hidden">
-                <div className="divide-y divide-line">
-                  {filteredMods.map((mod) => {
-                    const isExpanded = expandedMod === mod.filename
-                    return (
-                      <div
-                        key={mod.filename}
-                        className={[
-                          'p-4 transition-colors flex flex-col gap-2',
-                          mod.enabled ? 'bg-bg1/20' : 'bg-bg0/40 opacity-70'
-                        ].join(' ')}
-                      >
-                        {/* Summary row */}
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            {/* Toggle switch */}
-                            <button
-                              onClick={() => handleToggle(mod)}
-                              className="text-fgfaint hover:text-fg transition-colors shrink-0 cursor-pointer"
-                              title={mod.enabled ? 'Tắt mod' : 'Bật mod'}
-                            >
-                              {mod.enabled ? (
-                                <ToggleRight size={24} className="text-success" weight="fill" />
-                              ) : (
-                                <ToggleLeft size={24} className="text-fgfaint" />
-                              )}
-                            </button>
+              <>
+                <Card className="overflow-hidden">
+                  <div className="divide-y divide-line">
+                    {mods.map((mod) => {
+                      const isExpanded = expandedMod === mod.filename
+                      return (
+                        <div
+                          key={mod.filename}
+                          className={[
+                            'p-4 transition-colors flex flex-col gap-2',
+                            mod.enabled ? 'bg-bg1/20' : 'bg-bg0/40 opacity-70'
+                          ].join(' ')}
+                        >
+                          {/* Summary row */}
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              {/* Toggle switch */}
+                              <button
+                                onClick={() => handleToggle(mod)}
+                                className="text-fgfaint hover:text-fg transition-colors shrink-0 cursor-pointer"
+                                title={mod.enabled ? 'Tắt mod' : 'Bật mod'}
+                              >
+                                {mod.enabled ? (
+                                  <ToggleRight size={24} className="text-success" weight="fill" />
+                                ) : (
+                                  <ToggleLeft size={24} className="text-fgfaint" />
+                                )}
+                              </button>
 
-                            <div
-                              onClick={() => setExpandedMod(isExpanded ? null : mod.filename)}
-                              className="cursor-pointer min-w-0 flex-1"
-                            >
-                              <div className="font-semibold text-[14px] text-fg hover:text-accent transition-colors truncate">
-                                {mod.name}
+                              <div
+                                onClick={() => setExpandedMod(isExpanded ? null : mod.filename)}
+                                className="cursor-pointer min-w-0 flex-1"
+                              >
+                                <div className="font-semibold text-[14px] text-fg hover:text-accent transition-colors truncate">
+                                  {mod.name}
+                                </div>
+                                <div className="text-[10px] text-fgfaint font-mono truncate mt-0.5" title={mod.filename}>
+                                  {mod.filename}
+                                </div>
                               </div>
-                              <div className="text-[10px] text-fgfaint font-mono truncate mt-0.5" title={mod.filename}>
-                                {mod.filename}
-                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 shrink-0">
+                              <Badge tone="neutral" mono>{mod.version}</Badge>
+                              <span className="text-[11px] text-fgfaint font-mono">
+                                {formatBytes(mod.sizeBytes)}
+                              </span>
+                              <button
+                                onClick={() => setDeletingModFile(mod.filename)}
+                                className="p-1.5 rounded bg-bg2 hover:bg-errorsoft hover:text-error text-fgdim transition-colors cursor-pointer"
+                                title="Xóa mod"
+                              >
+                                <Trash size={12} />
+                              </button>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3 shrink-0">
-                            <Badge tone="neutral" mono>{mod.version}</Badge>
-                            <span className="text-[11px] text-fgfaint font-mono">
-                              {formatBytes(mod.sizeBytes)}
-                            </span>
-                            <button
-                              onClick={() => setDeletingModFile(mod.filename)}
-                              className="p-1.5 rounded bg-bg2 hover:bg-errorsoft hover:text-error text-fgdim transition-colors cursor-pointer"
-                              title="Xóa mod"
-                            >
-                              <Trash size={12} />
-                            </button>
-                          </div>
+                          {/* Description / Detail row */}
+                          {isExpanded && (
+                            <div className="pl-9 pr-4 py-2 text-[12px] text-fgdim leading-relaxed border-t border-line/30 mt-2 bg-bg0/30 rounded-lg">
+                              <div className="font-semibold text-fg mb-1">Mô tả:</div>
+                              <p>{mod.description || 'Không có mô tả cho mod này.'}</p>
+                              <div className="mt-2 text-[10px] text-fgfaint flex items-center gap-3">
+                                <span>Loader: <b className="text-fgdim uppercase">{mod.loader}</b></span>
+                                <span>•</span>
+                                <span>Ngày cập nhật: <b>{new Date(mod.updatedAt).toLocaleDateString()}</b></span>
+                              </div>
+                            </div>
+                          )}
                         </div>
+                      )
+                    })}
+                  </div>
+                </Card>
 
-                        {/* Description / Detail row */}
-                        {isExpanded && (
-                          <div className="pl-9 pr-4 py-2 text-[12px] text-fgdim leading-relaxed border-t border-line/30 mt-2 bg-bg0/30 rounded-lg">
-                            <div className="font-semibold text-fg mb-1">Mô tả:</div>
-                            <p>{mod.description || 'Không có mô tả cho mod này.'}</p>
-                            <div className="mt-2 text-[10px] text-fgfaint flex items-center gap-3">
-                              <span>Loader: <b className="text-fgdim uppercase">{mod.loader}</b></span>
-                              <span>•</span>
-                              <span>Ngày cập nhật: <b>{new Date(mod.updatedAt).toLocaleDateString()}</b></span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </Card>
+                {/* Pagination Controls */}
+                {totalMods > 10 && (
+                  <div className="flex items-center justify-between mt-3 px-1 no-drag">
+                    <span className="text-[11px] text-fgfaint font-medium">
+                      Hiển thị {Math.min((page - 1) * 10 + 1, totalMods)}-{Math.min(page * 10, totalMods)} trong số {totalMods} mod
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={page === 1}
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                      >
+                        Trang trước
+                      </Button>
+                      <span className="text-xs font-bold text-fg font-mono px-2 py-1 bg-bg2 rounded-lg border border-line">
+                        {page} / {Math.ceil(totalMods / 10)}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={page >= Math.ceil(totalMods / 10)}
+                        onClick={() => setPage(p => p + 1)}
+                      >
+                        Trang sau
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
